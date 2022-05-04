@@ -1,0 +1,69 @@
+{
+  "t": "READY",
+  "s": 1,
+  "op": 0,
+  "d": {
+    "v": 9,
+    "user_settings": {},
+    "user": {
+      "verified": true,
+      "username": "Myra Canary",
+      "mfa_enabled": true,
+      "id": "871694469974593627",
+      "flags": 0,
+      "email": null,
+      "discriminator": "8896",
+      "bot": true,
+      "avatar": "f4f2a39f206d65bbb22c814428c9b762"
+    },
+    "session_id": "8735860490cc39cb00788c5fc87433da",
+    "relationships": [],
+    "private_channels": [],
+    "presences": [],
+    "guilds": [
+      {
+        "unavailable": true,
+        "id": "642809436515074053"
+      },
+      {
+        "unavailable": true,
+        "id": "776389239293607956"
+      },
+      {
+        "unavailable": true,
+        "id": "776390154054271047"
+      },
+      {
+        "unavailable": true,
+        "id": "847047197316218880"
+      },
+      {
+        "unavailable": true,
+        "id": "851809328650518568"
+      },
+      {
+        "unavailable": true,
+        "id": "904663598327037993"
+      },
+      {
+        "unavailable": true,
+        "id": "929214055699349504"
+      }
+    ],
+    "guild_join_requests": [],
+    "geo_ordered_rtc_regions": [
+      "rotterdam",
+      "milan",
+      "stockholm",
+      "madrid",
+      "bucharest"
+    ],
+    "application": {
+      "id": "871694469974593627",
+      "flags": 2916352
+    },
+    "_trace": [
+      "[\"gateway-prd-main-mqjt\",{\"micros\":75748,\"calls\":[\"discord-sessions-green-prd-2-3\",{\"micros\":74140,\"calls\":[\"start_session\",{\"micros\":59721,\"calls\":[\"discord-api-55db4fc98f-k65gk\",{\"micros\":54492,\"calls\":[\"get_user\",{\"micros\":13575},\"add_authorized_ip\",{\"micros\":2325},\"get_guilds\",{\"micros\":7927},\"coros_wait\",{\"micros\":2}]}]},\"guilds_connect\",{\"micros\":3,\"calls\":[]},\"presence_connect\",{\"micros\":6,\"calls\":[]}]}]}]"
+    ]
+  }
+}
