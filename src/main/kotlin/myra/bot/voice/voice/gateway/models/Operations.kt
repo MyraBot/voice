@@ -1,4 +1,4 @@
-package myra.bot.voice.connection.gateway.models
+package myra.bot.voice.voice.gateway.models
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable

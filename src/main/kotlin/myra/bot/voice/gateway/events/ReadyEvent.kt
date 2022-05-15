@@ -8,6 +8,6 @@ import myra.bot.voice.gateway.models.User
 data class ReadyEvent(
     val user: User,
     @SerialName("session_id") val session: String
-) : VoiceEvent {
+) : GatewayEvent {
     override val identifier: String = "READY"
 }

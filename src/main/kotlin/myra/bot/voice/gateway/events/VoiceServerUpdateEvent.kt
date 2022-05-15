@@ -8,6 +8,6 @@ data class VoiceServerUpdateEvent(
     val token: String,
     @SerialName("guild_id") val guildId: String,
     val endpoint: String
-) : VoiceEvent {
+) : GatewayEvent {
     override val identifier: String = "VOICE_SERVER_UPDATE"
 }

@@ -1,6 +1,6 @@
 package myra.bot.voice.utils
 
-import com.github.m5rian.udp.VoiceConnection
+import myra.bot.voice.voice.udp.VoiceConnection
 
 object GuildConnectionManager {
 

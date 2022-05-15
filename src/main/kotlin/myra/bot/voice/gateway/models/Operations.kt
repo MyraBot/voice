@@ -25,4 +25,8 @@ enum class Operations(val code: Int) {
 
     }
 
+    companion object {
+        fun from(code: Int): Operations = values().first { it.code == code }
+    }
+
 }

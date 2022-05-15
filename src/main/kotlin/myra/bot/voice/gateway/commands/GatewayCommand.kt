@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import myra.bot.voice.gateway.models.Operations
 
 @Serializable
-abstract class Command(
+abstract class GatewayCommand(
     @Contextual val operation: Operations,
     @Contextual val sequence: Int? = null
 )

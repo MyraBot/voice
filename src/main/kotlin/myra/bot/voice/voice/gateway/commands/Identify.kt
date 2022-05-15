@@ -1,4 +1,4 @@
-package myra.bot.voice.connection.gateway.commands
+package myra.bot.voice.voice.gateway.commands
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
