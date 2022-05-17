@@ -1,8 +1,6 @@
 package myra.bot.voice.voice.udp
 
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.network.selector.ActorSelectorManager
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.CoroutineScope
@@ -10,51 +8,35 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
-import org.slf4j.LoggerFactory
+import myra.bot.voice.voice.gateway.VoiceGateway
+import myra.bot.voice.voice.gateway.commands.ProtocolDetails
+import myra.bot.voice.voice.gateway.commands.SelectProtocol
 import myra.bot.voice.voice.gateway.models.ConnectionReadyPayload
+import org.slf4j.LoggerFactory
 
-sealed class UdpSocket(
-    val endpoint: String,
-    val token: String,
-    val guildId: String
-) {
+class UdpSocket(val gateway: VoiceGateway) {
     private val logger = LoggerFactory.getLogger(UdpSocket::class.java)
     private val coroutines = CoroutineScope(Dispatchers.IO)
 
     private var connected = false
 
-    private val client = HttpClient(CIO) {
-        install(WebSockets)
-        expectSuccess = false
-    }
-
-    private suspend fun ready(event: ConnectionReadyPayload) {
-        /*
+     suspend fun openSocketConnection(event: ConnectionReadyPayload) {
         val selectorManager = ActorSelectorManager(Dispatchers.IO)
         val voiceServer = InetSocketAddress(event.ip, event.port)
         val udpSocket = aSocket(selectorManager).udp().connect(remoteAddress = voiceServer)
         val ip = discoverIp(udpSocket, voiceServer, event)
-        logger.info("Ip discovery successful, connecting to ${ip.hostname}:${ip.port}")
+        logger.debug("Ip discovery successful, connecting to ${ip.hostname}:${ip.port}")
 
-        val selectProtocol = SelectProtocol("udp", UdpDetails(ip.hostname, ip.port, "xsalsa20_poly1305_lite"))
-        val json = VOpcode(
-            operation = VOperations.SELECT_PROTOCOL,
-            details = json.encodeToJsonElement(selectProtocol)
-        ).toJson()
-        println(json)
-        socket.send(json)
-        println("send protocol thing")
-
+        val selectProtocol = SelectProtocol("udp", ProtocolDetails(ip.hostname, ip.port, "xsalsa20_poly1305_lite"))
+        gateway.send(selectProtocol)
+        /*
         socket.send(VOpcode(
             operation = VOperations.SPEAKING,
             details = JsonPrimitive(5)
         ).toJson())
-
+*/
 
         // Datagram(ByteReadPacket())
-
-
-         */
     }
 
     private suspend fun discoverIp(socket: ConnectedDatagramSocket, voiceServer: InetSocketAddress, event: ConnectionReadyPayload): InetSocketAddress {
@@ -63,11 +45,9 @@ sealed class UdpSocket(
             writeFully(ByteArray(66))
         })
 
-        println("Sent ip discovery")
-
         return with(socket.incoming.receive().packet) {
             discard(4)
-            val ip = io.ktor.utils.io.core.String(readBytes(64)).trimEnd(0.toChar())
+            val ip = String(readBytes(64)).trimEnd(0.toChar())
             val port = readUShort().toInt()
             InetSocketAddress(ip, port)
         }

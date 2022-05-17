@@ -1,30 +1,43 @@
 {
-  "op": 2,
+  "op": 4,
   "d": {
-    "streams": [
-      {
-        "type": "video",
-        "ssrc": 79111,
-        "rtx_ssrc": 79112,
-        "rid": "",
-        "quality": 0,
-        "active": false
-      }
+    "video_codec": null,
+    "secret_key": [
+      91,
+      29,
+      46,
+      129,
+      191,
+      49,
+      129,
+      23,
+      221,
+      136,
+      40,
+      159,
+      125,
+      220,
+      230,
+      32,
+      59,
+      242,
+      2,
+      141,
+      157,
+      117,
+      241,
+      137,
+      215,
+      196,
+      228,
+      70,
+      32,
+      38,
+      90,
+      76
     ],
-    "ssrc": 79110,
-    "port": 50003,
-    "modes": [
-      "aead_aes256_gcm_rtpsize",
-      "aead_aes256_gcm",
-      "xsalsa20_poly1305_lite_rtpsize",
-      "xsalsa20_poly1305_lite",
-      "xsalsa20_poly1305_suffix",
-      "xsalsa20_poly1305"
-    ],
-    "ip": "5.200.14.149",
-    "heartbeat_interval": 5500,
-    "experiments": [
-      "fixed_keyframe_interval"
-    ]
+    "mode": "xsalsa20_poly1305_lite",
+    "media_session_id": "e86858b763d0e795dea2f5479c4b277e",
+    "audio_codec": "opus"
   }
 }

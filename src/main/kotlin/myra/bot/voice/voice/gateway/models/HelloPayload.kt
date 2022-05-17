@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class HelloPayload(
-    @SerialName("heartbeat_interval") val heartbeatInterval: Int
+    @SerialName("heartbeat_interval") val heartbeatInterval: Long
 )

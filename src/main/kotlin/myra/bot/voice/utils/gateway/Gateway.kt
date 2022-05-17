@@ -21,7 +21,7 @@ abstract class Gateway(
     var sequence: Int = 0
     var socket: DefaultClientWebSocketSession? = null
 
-    internal suspend fun send(opcode: Opcode) {
+    suspend fun send(opcode: Opcode) {
         logger.debug(">>> ${opcode.toJson()}")
         socket?.send(opcode.toJson())
     }
