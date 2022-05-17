@@ -2,7 +2,7 @@ package myra.bot.voice.voice.gateway.commands
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import myra.bot.voice.gateway.models.Operations
+import myra.bot.voice.voice.gateway.models.Operations
 
 @Serializable
 data class Identify(

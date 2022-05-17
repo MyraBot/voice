@@ -1,7 +1,7 @@
 package myra.bot.voice
 
-import myra.bot.voice.voice.udp.VoiceConnection
 import myra.bot.voice.gateway.commands.VoiceStateUpdate
+import myra.bot.voice.voice.VoiceConnection
 
 suspend fun main() {
     VoiceApi.apply {
@@ -9,28 +9,14 @@ suspend fun main() {
         connectGateway()
     }.await()
 
-
-    val server1 = VoiceStateUpdate(
-        guildId = "851809328650518568",
-        channelId = "876079099943202926",
-        selfMute = false,
-        selfDeaf = false
-    )
-
-    val server2 = VoiceStateUpdate(
+    val server = VoiceStateUpdate(
         guildId = "642809436515074053",
         channelId = "712567184727212094",
         selfMute = false,
         selfDeaf = false
     )
-
-    /*
-    val mainConnection: VoiceConnection = VoiceApi.connect(server1).apply {
-
-    }*/
-    val testConnection: VoiceConnection = VoiceApi.connect(server2)
-
-
+    val connection: VoiceConnection = VoiceApi.connect(server)
+    connection.openVoiceGatewayConnection()
 
     while (true) {
 

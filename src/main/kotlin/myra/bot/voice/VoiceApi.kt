@@ -4,13 +4,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import myra.bot.voice.voice.udp.VoiceConnection
 import myra.bot.voice.gateway.GatewayClient
 import myra.bot.voice.gateway.commands.VoiceStateUpdate
 import myra.bot.voice.utils.asDeferred
+import myra.bot.voice.voice.VoiceConnection
 
 object VoiceApi {
     lateinit var token: String
+    lateinit var id: String
     private val scope = CoroutineScope(Dispatchers.Default)
     var gateway: GatewayClient? = null
 

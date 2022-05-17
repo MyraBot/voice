@@ -1,10 +1,10 @@
 package myra.bot.voice.voice.gateway.commands
 
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import myra.bot.voice.gateway.models.Operations
+import kotlinx.serialization.Transient
+import myra.bot.voice.voice.gateway.models.Operations
 
 @Serializable
 abstract class VoiceCommand(
-    @Contextual val operation: Operations
+    @Transient val operation: Operations = Operations.INVALID
 )

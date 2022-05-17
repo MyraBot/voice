@@ -25,12 +25,13 @@ enum class Operations(val code: Int) {
     RESUME(7),
     HELLO(8),
     RESUMED(9),
-    CLIENT_DISCONNECT(10);
+    CLIENT_DISCONNECT(10),
+    INVALID(-1);
 
     internal object Serializer : KSerializer<Operations> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("voice_gateway_operations", PrimitiveKind.INT)
         override fun deserialize(decoder: Decoder): Operations = decoder.decodeInt().let { int -> values().first { it.code == int } }
-        override fun serialize(encoder: Encoder, value: Operations) = encoder.encodeInt(value.code)
+        override fun serialize(encoder: Encoder, value: Operations) = if (value == INVALID) error("Invalid op code") else encoder.encodeInt(value.code)
     }
 
     companion object {

@@ -11,7 +11,7 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import org.slf4j.LoggerFactory
-import myra.bot.voice.voice.gateway.events.ConnectionReadyEvent
+import myra.bot.voice.voice.gateway.models.ConnectionReadyPayload
 
 sealed class UdpSocket(
     val endpoint: String,
@@ -28,7 +28,7 @@ sealed class UdpSocket(
         expectSuccess = false
     }
 
-    private suspend fun ready(event: ConnectionReadyEvent) {
+    private suspend fun ready(event: ConnectionReadyPayload) {
         /*
         val selectorManager = ActorSelectorManager(Dispatchers.IO)
         val voiceServer = InetSocketAddress(event.ip, event.port)
@@ -57,7 +57,7 @@ sealed class UdpSocket(
          */
     }
 
-    private suspend fun discoverIp(socket: ConnectedDatagramSocket, voiceServer: InetSocketAddress, event: ConnectionReadyEvent): InetSocketAddress {
+    private suspend fun discoverIp(socket: ConnectedDatagramSocket, voiceServer: InetSocketAddress, event: ConnectionReadyPayload): InetSocketAddress {
         socket.send(packet(voiceServer) {
             writeInt(event.ssrc)
             writeFully(ByteArray(66))
