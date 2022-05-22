@@ -1,4 +1,4 @@
-package myra.bot.voice.utils.gateway
+package myra.bot.voice.utils
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO

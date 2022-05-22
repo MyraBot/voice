@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data class SessionDescriptionPayload(
     @SerialName("audio_codec") val audioCodec: String,
     @SerialName("video_codec") val videoCodec: String?,
-    @SerialName("secret_key") val secretKey: List<Int>,
+    @SerialName("secret_key") val secretKey: List<UByte>,
     val mode: String,
     @SerialName("media_session_id") val mediaSession: String
 )

@@ -14,7 +14,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.*
 import myra.bot.voice.VoiceApi
 import myra.bot.voice.gateway.models.Opcode
-import myra.bot.voice.utils.gateway.Gateway
+import myra.bot.voice.utils.Gateway
 import myra.bot.voice.utils.json
 import myra.bot.voice.voice.gateway.commands.Identify
 import myra.bot.voice.voice.gateway.commands.VoiceCommand

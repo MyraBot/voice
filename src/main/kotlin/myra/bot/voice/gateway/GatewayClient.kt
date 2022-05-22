@@ -24,7 +24,7 @@ import myra.bot.voice.gateway.events.VoiceStateUpdateEvent
 import myra.bot.voice.gateway.models.Opcode
 import myra.bot.voice.gateway.models.Operations
 import myra.bot.voice.utils.asDeferred
-import myra.bot.voice.utils.gateway.Gateway
+import myra.bot.voice.utils.Gateway
 import myra.bot.voice.utils.json
 import myra.bot.voice.voice.VoiceConnection
 import org.slf4j.LoggerFactory

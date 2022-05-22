@@ -17,6 +17,7 @@ suspend fun main() {
     )
     val connection: VoiceConnection = VoiceApi.connect(server)
     connection.openVoiceGatewayConnection()
+    connection.play()
 
     while (true) {
 

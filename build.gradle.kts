@@ -24,6 +24,8 @@ repositories {
 }
 
 dependencies {
+    implementation("com.codahale:xsalsa20poly1305:0.11.0") // Encryption
+
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.21")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
