@@ -6,7 +6,6 @@ import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.websocket.send
 import myra.bot.voice.gateway.models.Opcode
-import myra.bot.voice.utils.toJson
 import org.slf4j.Logger
 
 abstract class Gateway(
