@@ -37,7 +37,7 @@ suspend fun main() = coroutineScope {
         selfDeaf = false)
 
     val connection: VoiceConnection = VoiceApi.connect(server)
-    connection.openVoiceGatewayConnection()
+    connection.openConnection()
 
     val player = playerManager.createPlayer()
     player.playTrack(track)

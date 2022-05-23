@@ -27,7 +27,7 @@ class VoiceConnection(
     private val gateway = VoiceGateway(endpoint, token, session, guildId)
     var udp: UdpSocket? = null
 
-    suspend fun openVoiceGatewayConnection() {
+    suspend fun openConnection() {
         gateway.connect()
         val connectionDetails = gateway.eventDispatcher
             .first { it.operation == Operations.READY.code }
