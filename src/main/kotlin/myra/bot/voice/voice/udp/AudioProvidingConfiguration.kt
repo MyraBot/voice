@@ -14,5 +14,5 @@ data class AudioProvidingConfiguration(
     val millisOfASecond: UInt = (1f / secondsPerPacket).toUInt()
 
     val samplesPerPacket: Int = (sampleRate.toFloat() * secondsPerPacket).toInt()
-    val incrementPerPacket: UInt = sampleRate / millisOfASecond
+    val timestampPerPacket: UInt = sampleRate / millisOfASecond
 }

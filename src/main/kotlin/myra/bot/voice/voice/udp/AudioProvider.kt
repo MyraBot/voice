@@ -1,17 +1,12 @@
 package myra.bot.voice.voice.udp
 
 import com.codahale.xsalsa20poly1305.SecretBox
-import io.ktor.utils.io.core.BytePacketBuilder
-import io.ktor.utils.io.core.writeFully
-import io.ktor.utils.io.core.writeInt
-import io.ktor.utils.io.core.writeShort
+import io.ktor.utils.io.core.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import myra.bot.voice.voice.gateway.VoiceGateway
 import myra.bot.voice.voice.gateway.models.SpeakingPayload
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.milliseconds
 
 class AudioProvider(
@@ -21,11 +16,9 @@ class AudioProvider(
     secretKey: ByteArray,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
 ) {
-    private val logger: Logger = LoggerFactory.getLogger(this::class.java)
     private val queuedFrames = Channel<ByteArray?>()
     private var encryption: SecretBox = SecretBox(secretKey)
     private var sentPackets: Short = 0
-    private var timestamp: UInt = 0u
 
     private var speaking = false
     private var silenceFrames = 5
@@ -67,7 +60,6 @@ class AudioProvider(
             .filterNotNull()
             .onEach { sendAudioPacket(it) }
             .onEach { sentPackets++ }
-            .onEach { timestamp += 960u }
             .launchIn(scope)
     }
 
@@ -84,7 +76,7 @@ class AudioProvider(
         writeByte(0x80.toByte()) // Version + Flags
         writeByte(0x78.toByte()) // Payload type
         writeShort(sentPackets) // Sequence, the count on how many packets have been sent yet
-        writeInt(timestamp.toInt()) // Timestamp
+        writeUInt(sentPackets.toUInt() * config.timestampPerPacket) // Timestamp
         writeInt(socket.connectDetails.ssrc) // SSRC
     }
 
