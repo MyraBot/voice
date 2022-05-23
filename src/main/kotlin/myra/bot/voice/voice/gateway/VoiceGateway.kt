@@ -3,7 +3,6 @@ package myra.bot.voice.voice.gateway
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
-import io.ktor.websocket.send
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -14,10 +13,8 @@ import myra.bot.voice.gateway.models.Opcode
 import myra.bot.voice.utils.Gateway
 import myra.bot.voice.utils.json
 import myra.bot.voice.utils.jsonLight
-import myra.bot.voice.utils.toJson
 import myra.bot.voice.voice.gateway.commands.Identify
 import myra.bot.voice.voice.gateway.commands.VoiceCommand
-import myra.bot.voice.voice.gateway.models.ConnectionReadyPayload
 import myra.bot.voice.voice.gateway.models.HelloPayload
 import myra.bot.voice.voice.gateway.models.Operations
 import org.slf4j.LoggerFactory
@@ -86,14 +83,7 @@ class VoiceGateway(
 
     private suspend fun sendHeartbeat() {
         lastTimestamp = System.currentTimeMillis()
-        //send(Opcode(Operations.HEARTBEAT.code, JsonPrimitive(lastTimestamp)))
-        socket!!.send("""
-            {
-                "op": 3,
-                "d": $lastTimestamp
-            }
-        """.trimIndent())
-        println("sent")
+        send(Opcode(Operations.HEARTBEAT.code, JsonPrimitive(lastTimestamp)))
     }
 
     private fun handleHeartbeat(opcode: Opcode) {
