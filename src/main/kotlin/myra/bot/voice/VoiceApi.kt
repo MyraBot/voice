@@ -1,9 +1,6 @@
 package myra.bot.voice
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import myra.bot.voice.gateway.GatewayClient
 import myra.bot.voice.gateway.commands.VoiceStateUpdate
 import myra.bot.voice.utils.asDeferred
@@ -12,15 +9,14 @@ import myra.bot.voice.voice.VoiceConnection
 object VoiceApi {
     lateinit var token: String
     lateinit var id: String
-    private val scope = CoroutineScope(Dispatchers.Default)
     var gateway: GatewayClient? = null
 
     fun connectGateway() {
         gateway = GatewayClient(token)
-        scope.launch { gateway?.connect() }
+        gateway?.connect() ?: throw Exception("Couldn't create a gateway client")
     }
 
-    suspend fun await() = asDeferred {
+    suspend fun awaitReady() = asDeferred {
         while (true) {
             val ready = gateway?.ready ?: throw IllegalStateException("Call #connectGateway first")
             if (ready) return@asDeferred
@@ -28,5 +24,7 @@ object VoiceApi {
         }
     }.await()
 
-    suspend fun connect(voiceState: VoiceStateUpdate): VoiceConnection = gateway?.requestConnection(voiceState) ?: error("Connect to the gateway client first")
+    suspend fun connect(voiceState: VoiceStateUpdate): VoiceConnection {
+       return gateway?.requestConnection(voiceState) ?: throw IllegalStateException("Connect to the gateway client first")
+    }
 }

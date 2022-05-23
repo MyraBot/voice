@@ -14,13 +14,13 @@ suspend fun main() = coroutineScope {
     VoiceApi.apply {
         token = "ODcxNjk0NDY5OTc0NTkzNjI3.YQfCvA.llaswdiV4PrNNGy6ORLaULCD_Y8"
         connectGateway()
-    }.await()
+    }.awaitReady()
 
     val playerManager = DefaultAudioPlayerManager()
     playerManager.registerSourceManager(YoutubeAudioSourceManager())
     val track = suspendCoroutine<AudioTrack> { c ->
         playerManager.loadItem(
-            "ytsearch:heylog",
+            "ytsearch:heylog - live",
             FunctionalResultHandler(
                 { c.resume(it) },
                 { c.resume(it.tracks.first()) },

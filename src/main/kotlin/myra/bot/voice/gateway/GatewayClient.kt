@@ -40,9 +40,10 @@ class GatewayClient(private val token: String) : Gateway(
     url = "wss://gateway.discord.gg/?v=9&encoding=json",
     logger = LoggerFactory.getLogger(GatewayClient::class.java)
 ) {
-    var sequence: Int? = null
+    private val scope = CoroutineScope(Dispatchers.Default)
+    private var sequence: Int? = null
+    private lateinit var sessionId: String
     var ready = false
-    lateinit var sessionId: String
 
     private val events = mutableMapOf(
         "READY" to ReadyEvent.serializer(),
@@ -62,69 +63,80 @@ class GatewayClient(private val token: String) : Gateway(
         eventDispatcher.emit(event)
     }
 
-    suspend fun connect() {
-        while (true) {
-            socket = client.webSocketSession(url)
-            try {
-                socket.incoming.receiveAsFlow().collect { frame ->
-                    val data = frame as Frame.Text
-                    logger.debug("<<< ${data.readText()}")
-
-                    val opcode: Opcode = json.decodeFromString(data.readText())
-                    opcode.sequence?.let { sequence = it }
-
-                    val op = opcode.operation ?: return@collect
-                    when (Operations.from(op)) {
-                        Operations.DISPATCH           -> dispatchEvent(opcode)
-                        Operations.HEARTBEAT          -> send(Opcode(operation = Operations.HEARTBEAT.code, sequence = sequence))
-                        Operations.IDENTIFY           -> TODO()
-                        Operations.VOICE_STATE_UPDATE -> TODO()
-                        Operations.HELLO              -> {
-                            if (sequence == null) identify(opcode) else resume()
-                            startHeartbeatInterval(opcode)
-                        }
-                        Operations.HEARTBEAT_ATTACK   -> logger.debug("<<< acknowledged Heartbeat!")
-                        else                          -> println("nothing")
-                    }
-
-                }
-            } catch (e: Exception) {
-                logger.error("Socket closed, here info lol")
-                e.printStackTrace()
-            }
-            val reason = withTimeoutOrNull(5.seconds) { socket.closeReason.await() }
-            logger.info("Close reason $reason")
-
-        }
-    }
-
-    private fun startHeartbeatInterval(opcode: Opcode) {
-        val interval = opcode.details?.jsonObject?.get("heartbeat_interval")?.jsonPrimitive?.long ?: throw IllegalStateException("huh?")
-        CoroutineScope(Dispatchers.Default).launch {
+    fun connect() {
+        scope.launch {
             while (true) {
-                delay(interval)
-                send(Opcode(operation = Operations.HEARTBEAT.code, sequence = sequence))
+                socket = client.webSocketSession(url)
+                try {
+                    socket.incoming.receiveAsFlow().collect { frame ->
+                        val data = frame as Frame.Text
+                        logger.debug("<<< ${data.readText()}")
+
+                        val opcode: Opcode = json.decodeFromString(data.readText())
+                        opcode.sequence?.let { sequence = it }
+
+                        val op = opcode.operation ?: return@collect
+                        when (Operations.from(op)) {
+                            Operations.DISPATCH         -> dispatchEvent(opcode)
+                            Operations.HEARTBEAT        -> send(Opcode(operation = Operations.HEARTBEAT.code, sequence = sequence))
+                            Operations.HELLO            -> onConnect(opcode)
+                            Operations.HEARTBEAT_ATTACK -> logger.debug("<<< acknowledged Heartbeat!")
+                            else                        -> println("nothing")
+                        }
+
+                    }
+                } catch (e: Exception) {
+                    logger.error("Socket closed, here info lol")
+                    e.printStackTrace()
+                }
+                ready = false
+                val reason = withTimeoutOrNull(5.seconds) { socket.closeReason.await() }
+                logger.info("Close reason $reason")
             }
         }
     }
 
-    private suspend fun resume() {
-        send(Resume(token, sessionId, sequence!!))
+    private suspend fun onConnect(opcode: Opcode) {
+        if (sequence == null) identify() else resumeSession()
+        val interval = opcode.details?.jsonObject?.get("heartbeat_interval")?.jsonPrimitive?.long ?: throw IllegalStateException("Invalid hello payload")
+        startHeartbeat(interval)
+    }
+
+    private fun startHeartbeat(interval: Long) = scope.launch {
+        while (true) {
+            delay(interval)
+            send(Opcode(operation = Operations.HEARTBEAT.code, sequence = sequence))
+        }
     }
 
     /**
-     * Finishes the handshake by sending the "identify" payload and starting the heartbeat.
-     *
-     * @param opcode The opcode from the hello operation.
+     * Resumes an interrupted gateway session.
      */
-    private suspend fun identify(opcode: Opcode) {
-        send(Identify(token))
+    private suspend fun resumeSession() = send(Resume(token, sessionId, sequence!!))
 
-        CoroutineScope(Dispatchers.Default).launch {
-            eventDispatcher.filterIsInstance<ReadyEvent>().first().apply {
-                sessionId = session
-                VoiceApi.id = user.id
-                ready = true
+    /**
+     * Finishes the handshake by sending the "identify" payload and starting the heartbeat.
+     */
+    private suspend fun identify() {
+        send(Identify(token))
+        awaitReady()
+    }
+
+    /**
+     * Awaits the ready payload and fills missing data.
+     */
+    private fun awaitReady() {
+        scope.launch {
+            try {
+                withTimeout(5.seconds) {
+                    eventDispatcher.filterIsInstance<ReadyEvent>().first().apply {
+                        sessionId = session
+                        VoiceApi.id = user.id
+                        ready = true
+                    }
+                }
+            } catch (e: TimeoutCancellationException) {
+                throw Exception("Didn't receive ready event in time")
             }
         }
     }
