@@ -15,6 +15,7 @@ enum class Operations(val code: Int) {
     IDENTIFY(2),
     PRESENCE_UPDATE(3),
     VOICE_STATE_UPDATE(4),
+    RESUME(6),
     HELLO(10),
     HEARTBEAT_ATTACK(11);
 

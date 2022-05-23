@@ -1,21 +1,22 @@
 package myra.bot.voice.gateway
 
-import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import myra.bot.voice.VoiceApi
 import myra.bot.voice.gateway.commands.GatewayCommand
 import myra.bot.voice.gateway.commands.Identify
+import myra.bot.voice.gateway.commands.Resume
 import myra.bot.voice.gateway.commands.VoiceStateUpdate
 import myra.bot.voice.gateway.events.GatewayEvent
 import myra.bot.voice.gateway.events.ReadyEvent
@@ -23,11 +24,12 @@ import myra.bot.voice.gateway.events.VoiceServerUpdateEvent
 import myra.bot.voice.gateway.events.VoiceStateUpdateEvent
 import myra.bot.voice.gateway.models.Opcode
 import myra.bot.voice.gateway.models.Operations
-import myra.bot.voice.utils.asDeferred
 import myra.bot.voice.utils.Gateway
+import myra.bot.voice.utils.asDeferred
 import myra.bot.voice.utils.json
 import myra.bot.voice.voice.VoiceConnection
 import org.slf4j.LoggerFactory
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Normal discord gateway connection manger. Used to open voice connections.
@@ -38,6 +40,7 @@ class GatewayClient(private val token: String) : Gateway(
     url = "wss://gateway.discord.gg/?v=9&encoding=json",
     logger = LoggerFactory.getLogger(GatewayClient::class.java)
 ) {
+    var sequence: Int? = null
     var ready = false
     lateinit var sessionId: String
 
@@ -59,27 +62,54 @@ class GatewayClient(private val token: String) : Gateway(
         eventDispatcher.emit(event)
     }
 
-    suspend fun connect() = client.webSocket(url) {
-        socket = this
-        incoming.receiveAsFlow().collect { frame ->
-            val data = frame as Frame.Text
-            logger.debug("<<< ${data.readText()}")
+    suspend fun connect() {
+        while (true) {
+            socket = client.webSocketSession(url)
+            try {
+                socket.incoming.receiveAsFlow().collect { frame ->
+                    val data = frame as Frame.Text
+                    logger.debug("<<< ${data.readText()}")
 
-            val opcode: Opcode = json.decodeFromString(data.readText())
-            opcode.sequence?.let { sequence = it }
+                    val opcode: Opcode = json.decodeFromString(data.readText())
+                    opcode.sequence?.let { sequence = it }
 
-            val op = opcode.operation ?: return@collect
-            when (Operations.from(op)) {
-                Operations.DISPATCH           -> dispatchEvent(opcode)
-                Operations.HEARTBEAT          -> send(Opcode(operation = Operations.HEARTBEAT.code, sequence = sequence))
-                Operations.IDENTIFY           -> TODO()
-                Operations.VOICE_STATE_UPDATE -> TODO()
-                Operations.HELLO              -> identify(opcode)
-                Operations.HEARTBEAT_ATTACK   -> logger.debug("<<< acknowledged Heartbeat!")
-                else                          -> println("nothing")
+                    val op = opcode.operation ?: return@collect
+                    when (Operations.from(op)) {
+                        Operations.DISPATCH           -> dispatchEvent(opcode)
+                        Operations.HEARTBEAT          -> send(Opcode(operation = Operations.HEARTBEAT.code, sequence = sequence))
+                        Operations.IDENTIFY           -> TODO()
+                        Operations.VOICE_STATE_UPDATE -> TODO()
+                        Operations.HELLO              -> {
+                            if (sequence == null) identify(opcode) else resume()
+                            startHeartbeatInterval(opcode)
+                        }
+                        Operations.HEARTBEAT_ATTACK   -> logger.debug("<<< acknowledged Heartbeat!")
+                        else                          -> println("nothing")
+                    }
+
+                }
+            } catch (e: Exception) {
+                logger.error("Socket closed, here info lol")
+                e.printStackTrace()
             }
+            val reason = withTimeoutOrNull(5.seconds) { socket.closeReason.await() }
+            logger.info("Close reason $reason")
 
         }
+    }
+
+    private fun startHeartbeatInterval(opcode: Opcode) {
+        val interval = opcode.details?.jsonObject?.get("heartbeat_interval")?.jsonPrimitive?.long ?: throw IllegalStateException("huh?")
+        CoroutineScope(Dispatchers.Default).launch {
+            while (true) {
+                delay(interval)
+                send(Opcode(operation = Operations.HEARTBEAT.code, sequence = sequence))
+            }
+        }
+    }
+
+    private suspend fun resume() {
+        send(Resume(token, sessionId, sequence!!))
     }
 
     /**
@@ -89,6 +119,7 @@ class GatewayClient(private val token: String) : Gateway(
      */
     private suspend fun identify(opcode: Opcode) {
         send(Identify(token))
+
         CoroutineScope(Dispatchers.Default).launch {
             eventDispatcher.filterIsInstance<ReadyEvent>().first().apply {
                 sessionId = session

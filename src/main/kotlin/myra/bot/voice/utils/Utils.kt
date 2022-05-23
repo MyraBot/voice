@@ -4,6 +4,11 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+val jsonLight = Json {
+    ignoreUnknownKeys = true
+    encodeDefaults = false
+}
+
 val json = Json {
     ignoreUnknownKeys = true
     encodeDefaults = true

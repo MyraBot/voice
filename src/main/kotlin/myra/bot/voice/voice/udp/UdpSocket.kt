@@ -1,20 +1,19 @@
 package myra.bot.voice.voice.udp
 
-import com.codahale.xsalsa20poly1305.SecretBox
 import io.ktor.network.selector.ActorSelectorManager
 import io.ktor.network.sockets.*
 import io.ktor.utils.io.core.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.serialization.json.JsonPrimitive
-import myra.bot.voice.gateway.models.Opcode
+import kotlinx.coroutines.flow.first
+import kotlinx.serialization.json.decodeFromJsonElement
+import myra.bot.voice.utils.json
 import myra.bot.voice.voice.gateway.VoiceGateway
 import myra.bot.voice.voice.gateway.commands.ProtocolDetails
 import myra.bot.voice.voice.gateway.commands.SelectProtocol
 import myra.bot.voice.voice.gateway.models.ConnectionReadyPayload
 import myra.bot.voice.voice.gateway.models.Operations
-import myra.bot.voice.voice.transmission.ByteArrayCursor
-import myra.bot.voice.voice.transmission.VoiceTransmissionsConfiguration
+import myra.bot.voice.voice.gateway.models.SessionDescriptionPayload
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 /**
@@ -27,64 +26,32 @@ class UdpSocket(
     val gateway: VoiceGateway,
     val connectDetails: ConnectionReadyPayload,
 ) {
-    private val logger = LoggerFactory.getLogger(UdpSocket::class.java)
+    private val logger: Logger = LoggerFactory.getLogger(UdpSocket::class.java)
     private lateinit var socket: ConnectedDatagramSocket
-    private val transmissionConfig: VoiceTransmissionsConfiguration = VoiceTransmissionsConfiguration()
-    private val voiceServer = InetSocketAddress(connectDetails.ip, connectDetails.port)
-
-    private lateinit var encryption: SecretBox
-    fun createEncryption(key: ByteArray) {
-        encryption = SecretBox(key)
-    }
+    private val voiceServer: SocketAddress = InetSocketAddress(connectDetails.ip, connectDetails.port)
+    lateinit var audioProvider: AudioProvider
 
     suspend fun openSocketConnection() {
-        val selectorManager = ActorSelectorManager(Dispatchers.IO)
-        socket = aSocket(selectorManager).udp().connect(remoteAddress = voiceServer)
+        socket = aSocket(ActorSelectorManager(Dispatchers.IO)).udp().connect(remoteAddress = voiceServer)
         val ip = discoverIp()
-        logger.debug("Ip discovery successful, connecting to ${ip.hostname}:${ip.port}")
         val selectProtocol = SelectProtocol("udp", ProtocolDetails(ip.hostname, ip.port, "xsalsa20_poly1305_suffix"))
         gateway.send(selectProtocol)
-        // Required to send audio
-        gateway.send(Opcode(
-            operation = Operations.SPEAKING.code,
-            details = JsonPrimitive(5)
-        ))
+
+        val secretKey = gateway.eventDispatcher
+            .first { it.operation == Operations.SESSION_DESCRIPTION.code }
+            .let { it.details ?: throw IllegalStateException() }
+            .let { json.decodeFromJsonElement<SessionDescriptionPayload>(it) }
+            .secretKey
+        audioProvider = AudioProvider(
+            gateway = gateway,
+            socket = this,
+            secretKey = secretKey.toUByteArray().toByteArray()
+        )
+        audioProvider.start()
     }
-
-    suspend fun sendAudio() {
-        val rawBytes = this::class.java.classLoader.getResourceAsStream("heylog - im sorry.ogx")?.readBytes() ?: error("Couldn't find song")
-        val bytes = ByteArrayCursor(rawBytes)
-
-        var sentPackets: UShort = 0u
-        while (bytes.cursor < bytes.size) {
-            sendAudioPacket(sentPackets, bytes.retrieve(transmissionConfig.samplesPerPacket))
-            sentPackets++
-            delay(transmissionConfig.millisPerPacket.toLong())
-        }
-    }
-
-    private suspend fun sendAudioPacket(sentPackets: UShort, bytes: ByteArray) {
-        val nonce = generateNonce()
-        send(voiceServer) {
-            writeHeader(sentPackets) // Rtp header
-            writeFully(encryptBytes(bytes, nonce)) // Opus encrypted audio
-            writeFully(nonce) // Generated nonce
-        }
-    }
-
-    private fun BytePacketBuilder.writeHeader(sentPackets: UShort) {
-        writeByte(80.toByte()) // Version + Flags
-        writeByte(78.toByte()) // Payload type
-        writeShort(sentPackets.toShort()) // Sequence, the count on how many packets have been sent yet
-        writeInt(sentPackets.toInt() * transmissionConfig.incrementPerPacket.toInt()) // Timestamp
-        writeInt(connectDetails.ssrc) // SSRC
-    }
-
-    private fun generateNonce(): ByteArray = encryption.nonce()
-    private fun encryptBytes(bytes: ByteArray, nonce: ByteArray) = encryption.seal(nonce, bytes)
 
     private suspend fun discoverIp(): InetSocketAddress {
-        send(voiceServer) {
+        send {
             writeInt(connectDetails.ssrc) // Ssrc
             writeFully(ByteArray(66)) // Address and port
         }
@@ -93,12 +60,13 @@ class UdpSocket(
             discard(4)
             val ip = String(readBytes(64)).trimEnd(0.toChar())
             val port = readUShort().toInt()
+            logger.debug("Ip discovery successful, connecting to ${ip}:${port}")
             InetSocketAddress(ip, port)
         }
     }
 
-    private suspend fun send(address: SocketAddress, builder: BytePacketBuilder.() -> Unit) {
-        val datagram = Datagram(buildPacket(block = builder), address)
+    suspend fun send(builder: BytePacketBuilder.() -> Unit) {
+        val datagram = Datagram(buildPacket(block = builder), voiceServer)
         socket.send(datagram)
     }
 

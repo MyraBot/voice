@@ -17,12 +17,11 @@ abstract class Gateway(
         expectSuccess = true
     }
 
-    var sequence: Int = 0
-    var socket: DefaultClientWebSocketSession? = null
+    lateinit var socket: DefaultClientWebSocketSession
 
     suspend fun send(opcode: Opcode) {
         logger.debug(">>> ${opcode.toJson()}")
-        socket?.send(opcode.toJson())
+        socket.send(opcode.toJson())
     }
 
 }

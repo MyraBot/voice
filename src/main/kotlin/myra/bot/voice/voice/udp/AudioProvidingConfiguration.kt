@@ -1,4 +1,4 @@
-package myra.bot.voice.voice.transmission
+package myra.bot.voice.voice.udp
 
 /**
  * Configuration for audio transmissions
@@ -6,7 +6,7 @@ package myra.bot.voice.voice.transmission
  * @property millisPerPacket The milliseconds worth of audio data sent with each packet.
  * @property sampleRate Samples per second, usually 48kHz.
  */
-data class VoiceTransmissionsConfiguration(
+data class AudioProvidingConfiguration(
     val millisPerPacket: UInt = 20u,
     val sampleRate: UInt = 48_000u,
 ) {

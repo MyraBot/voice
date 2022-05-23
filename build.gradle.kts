@@ -20,7 +20,9 @@ application {
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap") }
+    maven("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
+    maven("https://m2.dv8tion.net/releases")
+    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -36,6 +38,8 @@ dependencies {
 
 
     implementation("ch.qos.logback:logback-classic:$logback_version")
+
+    implementation("com.github.walkyst:lavaplayer-fork:original-SNAPSHOT")
     /*
     implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
     implementation("io.ktor:ktor-server-websockets-jvm:$ktor_version")

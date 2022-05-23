@@ -21,11 +21,12 @@ enum class Operations(val code: Int) {
     HEARTBEAT(3),
     SESSION_DESCRIPTION(4),
     SPEAKING(5),
-    HEARTBEAT_ATTACK(6),
+    HEARTBEAT_ACKNOWLEDGE(6),
     RESUME(7),
     HELLO(8),
     RESUMED(9),
     CLIENT_DISCONNECT(10),
+    SOMEBODY_CONNECT(14),
     INVALID(-1);
 
     internal object Serializer : KSerializer<Operations> {
