@@ -42,7 +42,7 @@ suspend fun main() = coroutineScope {
     val player = playerManager.createPlayer()
     player.playTrack(track)
 
-    connection.udp?.audioProvider?.provide { player.provide()?.data }
+   connection.udp?.audioProvider?.provide { player.provide()?.data }
 
     while (true) {
     }

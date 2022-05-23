@@ -32,35 +32,50 @@ class AudioProvider(
         }
     }
 
+    /**
+     * Starts sending audio frames to discord.
+     * The frames get pulled from the [queuedFrames].
+     */
     fun start() {
         queuedFrames.consumeAsFlow()
             .map { data ->
-                if (data != null) {
-                    // Required to send audio
-                    if (!speaking) {
-                        silenceFrames = 5
-                        speaking = true
-                        gateway.send(SpeakingPayload(5, 0, socket.connectDetails.ssrc))
-                    }
+                data?.let {
+                    if (!speaking) startSpeaking() // First audio frame ➜ tell Discord that we want tos peak
                     AudioFrame.fromBytes(data)
-                } else {
-                    if (silenceFrames > 0) {
-                        silenceFrames--
-                        AudioFrame.Silence
-                    } else {
-                        // Required to send audio
-                        if (speaking) {
-                            speaking = false
-                            gateway.send(SpeakingPayload(0, 0, socket.connectDetails.ssrc))
-                        }
-                        null
-                    }
-                }
+                } ?: provideNullFrame()
             }
             .filterNotNull()
             .onEach { sendAudioPacket(it) }
             .onEach { sentPackets++ }
             .launchIn(scope)
+    }
+
+    private suspend fun startSpeaking() {
+        silenceFrames = 5 // Reset silent frames
+        speaking = true
+        gateway.send(SpeakingPayload(5, 0, socket.connectDetails.ssrc))
+    }
+
+    private suspend fun stopSpeaking() {
+        speaking = false
+        gateway.send(SpeakingPayload(0, 0, socket.connectDetails.ssrc))
+    }
+
+    /**
+     * Provides an [AudioFrame] from null.
+     *
+     * @return Returns [AudioFrame.Silence] or null.
+     */
+    private suspend fun provideNullFrame(): AudioFrame? {
+        // We are sending silent frames and haven't completed sending all 5 of them
+        return if (silenceFrames > 0) {
+            silenceFrames--
+            AudioFrame.Silence
+        } else {
+            // After we stopped speaking & after we sent ALL silent frames, we can tell Discord that we want to stop speaking
+            if (speaking) stopSpeaking()
+            null
+        }
     }
 
     private suspend fun sendAudioPacket(frame: AudioFrame) {
