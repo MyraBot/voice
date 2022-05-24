@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonObject
 @Serializable
 data class VoiceStateUpdateEvent(
     @SerialName("guild_id") val guildId: String,
-    @SerialName("channel_id") val channelId: String,
+    @SerialName("channel_id") val channelId: String?,
     @SerialName("user_id") val userId: String,
     val member: JsonObject? = null,
     @SerialName("session_id") val sessionId: String,
