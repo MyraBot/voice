@@ -4,15 +4,13 @@ import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.long
+import kotlinx.serialization.json.*
 import myra.bot.voice.VoiceApi
 import myra.bot.voice.gateway.commands.GatewayCommand
 import myra.bot.voice.gateway.commands.Identify
@@ -67,6 +65,7 @@ class GatewayClient(private val token: String) : Gateway(
         scope.launch {
             while (true) {
                 socket = client.webSocketSession(url)
+
                 try {
                     socket.incoming.receiveAsFlow().collect { frame ->
                         val data = frame as Frame.Text
@@ -78,14 +77,13 @@ class GatewayClient(private val token: String) : Gateway(
                         val op = opcode.operation ?: return@collect
                         when (Operations.from(op)) {
                             Operations.DISPATCH         -> dispatchEvent(opcode)
-                            Operations.HEARTBEAT        -> send(Opcode(operation = Operations.HEARTBEAT.code, sequence = sequence))
+                            Operations.HEARTBEAT        -> sendHeartbeat()
                             Operations.HELLO            -> onConnect(opcode)
                             Operations.HEARTBEAT_ATTACK -> logger.debug("<<< acknowledged Heartbeat!")
-                            else                        -> println("nothing")
                         }
 
                     }
-                } catch (e: Exception) {
+                } catch (e: ClosedReceiveChannelException) {
                     logger.error("Socket closed, here info lol")
                     e.printStackTrace()
                 }
@@ -105,9 +103,14 @@ class GatewayClient(private val token: String) : Gateway(
     private fun startHeartbeat(interval: Long) = scope.launch {
         while (true) {
             delay(interval)
-            send(Opcode(operation = Operations.HEARTBEAT.code, sequence = sequence))
+            sendHeartbeat()
         }
     }
+
+    /**
+     * Sends a single heartbeat.
+     */
+    private suspend fun sendHeartbeat() = send(Opcode(operation = Operations.HEARTBEAT.code, details = JsonPrimitive(sequence)))
 
     /**
      * Resumes an interrupted gateway session.

@@ -2,6 +2,7 @@ package myra.bot.voice
 
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.FunctionalResultHandler
+import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import kotlinx.coroutines.coroutineScope
@@ -20,7 +21,7 @@ suspend fun main() = coroutineScope {
     playerManager.registerSourceManager(YoutubeAudioSourceManager())
     val track = suspendCoroutine<AudioTrack> { c ->
         playerManager.loadItem(
-            "ytsearch:heylog - live",
+            "https://www.youtube.com/watch?v=H0n7HoBpP6s",
             FunctionalResultHandler(
                 { c.resume(it) },
                 { c.resume(it.tracks.first()) },
