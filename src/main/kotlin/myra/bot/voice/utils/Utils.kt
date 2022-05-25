@@ -15,6 +15,7 @@ val json = Json {
 }
 
 inline fun <reified T> T.toJson(): String = json.encodeToString(this)
+inline fun <reified T> T.toLightJson(): String = jsonLight.encodeToString(this)
 
 fun <T> asDeferred(scope: CoroutineScope = CoroutineScope(Dispatchers.Default), runnable: suspend () -> T): Deferred<T> {
     val future = CompletableDeferred<T>()

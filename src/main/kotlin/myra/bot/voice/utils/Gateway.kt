@@ -20,8 +20,8 @@ abstract class Gateway(
     lateinit var socket: DefaultClientWebSocketSession
 
     suspend fun send(opcode: Opcode) {
-        logger.debug(">>> ${opcode.toJson()}")
-        socket.send(opcode.toJson())
+        logger.debug(">>> ${opcode.toLightJson()}")
+        socket.send(opcode.toLightJson())
     }
 
 }
