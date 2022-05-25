@@ -81,13 +81,13 @@ class AudioProvider(
     private suspend fun sendAudioPacket(frame: AudioFrame) {
         val nonce = generateNonce()
         socket.send {
-            writeHeader(sentPackets) // Rtp header
+            writeHeader() // Rtp header
             writeFully(encryptBytes(frame.bytes, nonce)) // Encrypted opus audio
             writeFully(nonce) // Generated nonce
         }
     }
 
-    private fun BytePacketBuilder.writeHeader(sentPackets: Short) {
+    private fun BytePacketBuilder.writeHeader() {
         writeByte(0x80.toByte()) // Version + Flags
         writeByte(0x78.toByte()) // Payload type
         writeShort(sentPackets) // Sequence, the count on how many packets have been sent yet
