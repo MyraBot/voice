@@ -29,27 +29,14 @@ repositories {
 
 dependencies {
     implementation("com.codahale:xsalsa20poly1305:0.11.0") // Encryption
-
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.21")
-
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+    implementation("com.github.walkyst:lavaplayer-fork:original-SNAPSHOT") // Getting opus audio
 
     implementation("io.ktor:ktor-client-core-jvm:$ktor_version")
     implementation("io.ktor:ktor-client-cio-jvm:$ktor_version")
     implementation("io.ktor:ktor-client-websockets-jvm:$ktor_version")
 
-
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
     implementation("ch.qos.logback:logback-classic:$logback_version")
-
-    implementation("com.github.walkyst:lavaplayer-fork:original-SNAPSHOT")
-    /*
-    implementation("io.ktor:ktor-server-core-jvm:$ktor_version")
-    implementation("io.ktor:ktor-server-websockets-jvm:$ktor_version")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktor_version")
-    testImplementation("io.ktor:ktor-server-tests-jvm:$ktor_version")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
-
-     */
 }
 
 tasks.withType<KotlinCompile> {
