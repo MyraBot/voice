@@ -5,6 +5,8 @@ I made this library to understand how the Voice API works and get a basic exampl
 
 The library handles the voice sockets as well as the main gateway. Both are really simple and do not feature full support for everything.
 
+![Warning](https://raw.githubusercontent.com/MyraBot/.github/main/code-advise.png)
+
 ## 🏗️ Example
 
 The example uses [Lavaplayer](https://github.com/walkyst/lavaplayer-fork) to get opus encoded audio.
